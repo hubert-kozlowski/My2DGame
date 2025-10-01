@@ -16,14 +16,24 @@ public class GamePanel extends JPanel implements Runnable {
     final int screenWidth = tileSize * maxScreenCol; // 768 pixels
     final int screenHeight = tileSize * maxScreenRow; // 576 pixels
 
+    //FPS
+    int FPS = 60;
+
+    KeyHandler keyH = new KeyHandler();
     Thread gameThread;
+
+    // Set player default position
+    int playerX = 100;
+    int playerY = 100;
+    int playerSpeed = 4;
 
     public GamePanel() {
 
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
         this.setBackground(Color.black);
         this.setDoubleBuffered(true); // for better rendering performance
-
+        this.addKeyListener(keyH);
+        this.setFocusable(true); // to be able to receive key input
 
     }
 
@@ -32,17 +42,102 @@ public class GamePanel extends JPanel implements Runnable {
         gameThread.start();
     }
 
-    @Override
+//    @Override
+//    public void run() {
+//
+//        double drawInterval = (double) 1000000000 / FPS; // 1 second, in nanoseconds, divided by 60, 0.01666667 seconds
+//        double nextDrawTime = System.nanoTime() + drawInterval;
+//
+//
+//        while (gameThread != null) {
+//            // 1 update: update information such as character positions
+//            update();
+//
+//
+//            // 2 draw: draw the screen with the updated information
+//            repaint();
+//
+//
+//
+//            try{
+//                double remainingTime = nextDrawTime - System.nanoTime();
+//                remainingTime = remainingTime/1000000; // convert to milliseconds
+//
+//                if (remainingTime < 0) {
+//                    remainingTime = 0; // if the update and draw took longer than the draw interval, skip the sleep
+//                }
+//
+//                Thread.sleep((long) remainingTime); // convert to milliseconds
+//
+//                nextDrawTime += drawInterval;
+//
+//
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
+
     public void run() {
 
+        double drawInterval = 1000000000 / FPS; // 1 second, in nanoseconds, divided by 60, 0.01666667 seconds
+        double delta = 0;
+        long lastTime = System.nanoTime();
+        long currentTime;
+        long timer = 0;
+        int drawCount = 0;
+
         while (gameThread != null) {
+            currentTime = System.nanoTime();
 
-            System.out.println("The game is running");
+            delta += (currentTime - lastTime) / drawInterval;
+            timer += (currentTime - lastTime);
+            lastTime = currentTime;
 
-            // 1 update: update information such as character positions
-            // 2 draw: draw the screen with the updated information
 
+            if (delta >= 1) {
+                // 1 update: update information such as character positions
+                update();
+                // 2 draw: draw the screen with the updated information
+                repaint();
+                delta--;
 
+                drawCount++;
+            }
+
+            if (timer >= 1000000000) {
+                System.out.println("FPS: " + drawCount);
+                drawCount = 0;
+                timer = 0;
+            }
         }
+    }
+
+    public void update() {
+        // update game state
+
+        if (keyH.upPressed) {
+            playerY -= playerSpeed;
+        } else if (keyH.downPressed) {
+            playerY += playerSpeed;
+        } else if (keyH.leftPressed) {
+            playerX -= playerSpeed;
+        } else if (keyH.rightPressed) {
+            playerX += playerSpeed;
+        }
+    }
+
+    public void paintComponent(Graphics g) { // literally a built-in method
+        super.paintComponent(g);
+
+        Graphics2D g2 = (Graphics2D) g;
+
+        g2.setColor(Color.white);
+
+        g2.fillRect(playerX, playerY, tileSize, tileSize);
+
+        g2.dispose(); // to free up memory
+
+
     }
 }
