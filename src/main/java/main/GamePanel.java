@@ -6,6 +6,7 @@ import entity.Enemy;
 import javax.swing.JPanel;
 import java.awt.*;
 import java.sql.SQLOutput;
+import java.awt.geom.AffineTransform;
 
 public class GamePanel extends JPanel implements Runnable {
 
@@ -125,8 +126,18 @@ public class GamePanel extends JPanel implements Runnable {
 
         Graphics2D g2 = (Graphics2D) g;
 
+        // Camera: translate so the player is centered on screen
+        int offsetX = (screenWidth / 2) - (tileSize / 2) - player.x;
+        int offsetY = (screenHeight / 2) - (tileSize / 2) - player.y;
+        AffineTransform oldTx = g2.getTransform();
+        g2.translate(offsetX, offsetY);
+
+        // draw world-space entities
         player.draw(g2);
         enemy.draw(g2);
+
+        // restore transform
+        g2.setTransform(oldTx);
 
         g2.dispose(); // to free up memory
 
